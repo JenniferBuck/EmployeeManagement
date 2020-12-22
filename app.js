@@ -7,7 +7,7 @@ let departments;
 let managers;
 let employees;
 
-var connection = mysql.createConnection({
+var connectingToDatabase = mysql.createConnection({
     host: "localhost",
   
     // Your port; if not 3306
@@ -18,75 +18,76 @@ var connection = mysql.createConnection({
   
     // Your password
     password: "0718605774john",
+    // database name
     database: "employees_db"
   });
 
-  figlet('FSC Employee Tracker', (err, result) => {
+  figlet('Employee Tracker Assignment', (err, result) => {
     console.log(err || result);
   });
 
-  connection.connect(function(err) {
+  connectingToDatabase.connect(function(err) {
     if (err) throw err;
-    start();
-    getDepartments();
-    getRoles();
-    getManagers();
+    program_start();
+    retrieve_departments();
+    retrieve_roles();
+    retrieve_managers();
     getEmployees();
   });
 
-  start = () => {
+  program_start = () => {
 
     inquirer
       .prompt({
         name: "choices",
         type: "list",
-        message: "What would you like to do?",
-        choices: ["ADD", "VIEW", "UPDATE", "DELETE", "EXIT"]
+        message: "choose action ?",
+        choices: ["ADDING DATA", "VIEWING DATA", "UPDATING DATA", "DELETING DATA", "PROGRAM EXIT"]
       })
       .then(function(answer) {
-        if (answer.choices === "ADD") {
+        if (answer.choices === "ADDING DATA") {
           addSomething();
         }
-        else if (answer.choices === "VIEW") {
+        else if (answer.choices === "VIEWING DATA") {
           viewSomething();
         } 
-        else if (answer.choices === "UPDATE") {
+        else if (answer.choices === "UPDATING DATA") {
           updateSomething();
         }
-        else if (answer.choices === "DELETE") {
+        else if (answer.choices === "DELETING DATA") {
           deleteSomething();
         }
-        else if (answer.choices === "EXIT") {
-          figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+        else if (answer.choices === "PROGRAM EXIT") {
+          figlet('GOOD BYE', (err, result) => {
             console.log(err || result);
           });
         
-          connection.end();
+          connectingToDatabase.end();
         }
         else{
-          connection.end();
+          connectingToDatabase.end();
         }
       });
   }
 
-getRoles = () => {
-  connection.query("SELECT id, title FROM role", (err, res) => {
+retrieve_roles = () => {
+  connectingToDatabase.query("SELECT id, title FROM role", (err, res) => {
     if (err) throw err;
     roles = res;
     // console.table(roles);
   })
 };
 
-getDepartments = () => {
-  connection.query("SELECT id, name FROM department", (err, res) => {
+retrieve_departments = () => {
+  connectingToDatabase.query("SELECT id, name FROM department", (err, res) => {
     if (err) throw err;
     departments = res;
     // console.log(departments);
   })
 };
 
-getManagers = () => {
-  connection.query("SELECT id, first_name, last_name, CONCAT_WS(' ', first_name, last_name) AS managers FROM employee", (err, res) => {
+retrieve_managers = () => {
+  connectingToDatabase.query("SELECT id, first_name, last_name, CONCAT_WS(' ', first_name, last_name) AS managers FROM employee", (err, res) => {
     if (err) throw err;
     managers = res;
     // console.table(managers);
@@ -94,7 +95,7 @@ getManagers = () => {
 };
 
 getEmployees = () => {
-  connection.query("SELECT id, CONCAT_WS(' ', first_name, last_name) AS Employee_Name FROM employee", (err, res) => {
+  connectingToDatabase.query("SELECT id, CONCAT_WS(' ', first_name, last_name) AS Employee_Name FROM employee", (err, res) => {
     if (err) throw err;
     employees = res;
     // console.table(employees);
@@ -123,13 +124,13 @@ addSomething = () => {
       addEmployee();
     } 
     else if (answer.add === "EXIT") {
-      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+      figlet('GOOD BYE', (err, result) => {
         console.log(err || result);
       });
 
-      connection.end();
+      connectingToDatabase.end();
     } else {
-      connection.end();
+      connectingToDatabase.end();
     }
   })
 };
@@ -142,11 +143,11 @@ addDepartment = () => {
       message: "What department would you like to add?"
     }
   ]).then(function(answer) {
-    connection.query(`INSERT INTO department (name) VALUES ('${answer.department}')`, (err, res) => {
+    connectingToDatabase.query(`INSERT INTO department (name) VALUES ('${answer.department}')`, (err, res) => {
       if (err) throw err;
       console.log("1 new department added: " + answer.department);
-      getDepartments();
-      start();
+      retrieve_departments();
+      program_start();
     }) 
   })
 };
@@ -180,19 +181,19 @@ addRole = () => {
         department_id = departmentOptions[i].id
       }
     }
-    connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.title}', '${answer.salary}', ${department_id})`, (err, res) => {
+    connectingToDatabase.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.title}', '${answer.salary}', ${department_id})`, (err, res) => {
       if (err) throw err;
 
       console.log("1 new role added: " + answer.title);
-      getRoles();
-      start();
+      retrieve_roles();
+      program_start();
     }) 
   })
 };
 
 addEmployee = () => {
-  getRoles();
-  getManagers();
+  retrieve_roles();
+  retrieve_managers();
   let roleOptions = [];
   for (i = 0; i < roles.length; i++) {
     roleOptions.push(Object(roles[i]));
@@ -249,12 +250,12 @@ addEmployee = () => {
       }
     }
 
-    connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${answer.first_name}', '${answer.last_name}', ${role_id}, ${manager_id})`, (err, res) => {
+    connectingToDatabase.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${answer.first_name}', '${answer.last_name}', ${role_id}, ${manager_id})`, (err, res) => {
       if (err) throw err;
 
       console.log("1 new employee added: " + answer.first_name + " " + answer.last_name);
-      getEmployees();
-      start()
+      retrieve_employees();
+      program_start()
     }) 
   })
 };
@@ -278,50 +279,50 @@ viewSomething = () => {
       viewEmployees();
     }
     else if (answer.viewChoice === "EXIT") {
-      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+      figlet('GOOD BYE', (err, result) => {
         console.log(err || result);
       });
 
-      connection.end();
+      connectingToDatabase.end();
     } else {
-      connection.end();
+      connectingToDatabase.end();
     }
   })
 };
 
 viewDepartments = () => {
-  connection.query("SELECT * FROM department", (err, res) => {
+  connectingToDatabase.query("SELECT * FROM department", (err, res) => {
     if (err) throw err;
-    figlet('Departments', (err, result) => {
+    figlet('Your Viewing Departments', (err, result) => {
       console.log(err || result);
     });
 
     printTable(res);
-    start();
+    program_start();
   });
 };
 
 viewRoles = () => {
-  connection.query("SELECT  r.id, r.title, r.salary, d.name as Department_Name FROM role AS r INNER JOIN department AS d ON r.department_id = d.id", (err, res) => {
+  connectingToDatabase.query("SELECT  r.id, r.title, r.salary, d.name as Department_Name FROM role AS r INNER JOIN department AS d ON r.department_id = d.id", (err, res) => {
     if (err) throw err;
-    figlet('Roles', (err, result) => {
+    figlet('Your Viewing Roles', (err, result) => {
       console.log(err || result);
     });
 
     printTable(res);
-    start();
+    program_start();
   });
 };
 
 viewEmployees = () => {
-  connection.query('SELECT e.id, e.first_name, e.last_name, d.name AS department, r.title, r.salary, CONCAT_WS(" ", m.first_name, m.last_name) AS manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id INNER JOIN role r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.id ASC', (err, res) => {
+  connectingToDatabase.query('SELECT e.id, e.first_name, e.last_name, d.name AS department, r.title, r.salary, CONCAT_WS(" ", m.first_name, m.last_name) AS manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id INNER JOIN role r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.id ASC', (err, res) => {
     if (err) throw err;
-    figlet('Employees', (err, result) => {
+    figlet('Your Viewing Employees', (err, result) => {
       console.log(err || result);
     });
   
     printTable(res);
-    start();
+    program_start();
   });
 };
 
@@ -341,13 +342,13 @@ updateSomething = () => {
       updateEmployeeManager();
     }
     else if(answer.update === "EXIT") {
-      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+      figlet('GOOD BYE', (err, result) => {
         console.log(err || result);
       });
 
-      connection.end();
+      connectingToDatabase.end();
     } else {
-      connection.end();
+      connectingToDatabase.end();
     }
   })
 };
@@ -398,15 +399,15 @@ updateEmployeeRole = () => {
 for (i = 0; i < roleOptions.length; i++) {
   if (answer.newRole === roleOptions[i].title) {
     newChoice = roleOptions[i].id
-    connection.query(`UPDATE employee SET role_id = ${newChoice} WHERE id = ${employeeSelected}`), (err, res) => {
+    connectingToDatabase.query(`UPDATE employee SET role_id = ${newChoice} WHERE id = ${employeeSelected}`), (err, res) => {
       if (err) throw err;
     };
   }
 }
 console.log("Role updated succesfully");
-getEmployees();
-getRoles();
-start();
+retrieve_employees();
+retrieve_roles();
+program_start();
     })
   })
 };
@@ -432,8 +433,8 @@ updateEmployeeManager = () => {
       }
     }
   ]).then(answer => {
-    getEmployees();
-    getManagers();
+    retrieve_employees();
+    retrieve_managers();
     let managerOptions = [];
     for (i = 0; i < managers.length; i++) {
       managerOptions.push(Object(managers[i]));
@@ -460,15 +461,15 @@ updateEmployeeManager = () => {
 for (i = 0; i < managerOptions.length; i++) {
   if (answer.newManager === managerOptions[i].managers) {
     newChoice = managerOptions[i].id
-    connection.query(`UPDATE employee SET manager_id = ${newChoice} WHERE id = ${employeeSelected}`), (err, res) => {
+    connectingToDatabase.query(`UPDATE employee SET manager_id = ${newChoice} WHERE id = ${employeeSelected}`), (err, res) => {
       if (err) throw err;
     };
     console.log("Manager Updated Succesfully");
   }
 }
-getEmployees();
-getManagers();
-start();
+retrieve_employees();
+retrieve_managers();
+program_start();
     })
   })
 };
@@ -491,14 +492,14 @@ deleteSomething = () => {
     else if (answer.delete === "Delete employee") {
       deleteEmployee();
     } else if(answer.delete === "EXIT") {
-      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+      figlet('GOOD BYE', (err, result) => {
         console.log(err || result);
       });
 
-      connection.end();
+      connectingToDatabase.end();
     }
      else {
-      connection.end();
+      connectingToDatabase.end();
     }
   })
 };
@@ -526,14 +527,14 @@ deleteDepartment = () => {
     for (i = 0; i < departmentOptions.length; i++) {
       if (answer.deleteDepartment === departmentOptions[i].name) {
         newChoice = departmentOptions[i].id
-        connection.query(`DELETE FROM department Where id = ${newChoice}`), (err, res) => {
+        connectingToDatabase.query(`DELETE FROM department Where id = ${newChoice}`), (err, res) => {
           if (err) throw err;
         };
         console.log("Department: " + answer.deleteDepartment + " Deleted Succesfully");
       }
     }
-    getDepartments();
-    start();
+    retrieve_departments();
+    program_start();
   })
 };
 
@@ -560,14 +561,14 @@ deleteRole = () => {
     for (i = 0; i < roleOptions.length; i++) {
       if (answer.deleteRole === roleOptions[i].title) {
         newChoice = roleOptions[i].id
-        connection.query(`DELETE FROM role Where id = ${newChoice}`), (err, res) => {
+        connectingToDatabase.query(`DELETE FROM role Where id = ${newChoice}`), (err, res) => {
           if (err) throw err;
         };
         console.log("Role: " + answer.deleteRole + " Deleted Succesfully");
       }
     }
-    getRoles();
-    start();
+    retrieve_roles();
+    program_start();
   })
 };
 
@@ -594,15 +595,14 @@ deleteEmployee = () => {
     for (i = 0; i < employeeOptions.length; i++) {
       if (answer.deleteEmployee === employeeOptions[i].Employee_Name) {
         newChoice = employeeOptions[i].id
-        connection.query(`DELETE FROM employee Where id = ${newChoice}`), (err, res) => {
+        connectingToDatabase.query(`DELETE FROM employee Where id = ${newChoice}`), (err, res) => {
           if (err) throw err;
         };
         console.log("Employee: " + answer.deleteEmployee + " Deleted Succesfully");
       }
     }
-    getEmployees();
-    start();
+    retrieve_employees();
+    program_start();
   })
 };
 
-// @hoffman1200 Fernando Soto 
